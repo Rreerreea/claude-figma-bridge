@@ -54,7 +54,7 @@ function run() {
 
   if (DRY) return 'ok: ' + Math.round(W) + 'x' + Math.round(H) + ', ' + SECONDS + ' s';
 
-  win.orderFrontRegardless();
+  win.orderFrontRegardless;   // JXA: methods without arguments are called without ()
   const pump = (sec) => $.NSRunLoop.currentRunLoop.runUntilDate($.NSDate.dateWithTimeIntervalSinceNow(sec));
   const t0 = Date.now();
   let shown = 0, nextJump = 1.2;
@@ -71,6 +71,6 @@ function run() {
     pump(0.05);
   }
   win.orderOut(null);
-  win.close();
+  win.close;
   return 'done';
 }
