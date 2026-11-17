@@ -20,7 +20,7 @@ Script contract (the body of an async function with `figma` in scope):
   - png_/jpg_ keys are written to files in --out and removed from the printed result.
   - throw or return { __error: '...' } to fail; the runner exits with code 1 and prints the message.
 
-Environment: FIGMA_BRIDGE_HOME (default ~/.figma-bridge), FIGMA_BRIDGE_PORT (default 7787).
+Environment: FIGMA_BRIDGE_HOME (default ~/Documents/Claude Bridge), FIGMA_BRIDGE_PORT (default 7787).
 """
 import base64
 import json
@@ -32,7 +32,8 @@ import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-HOME = os.path.expanduser(os.environ.get('FIGMA_BRIDGE_HOME', '~/.figma-bridge'))
+HOME = os.path.expanduser(os.environ.get('FIGMA_BRIDGE_HOME', os.path.join('~', 'Documents', 'Claude Bridge')))
+SETUP = os.path.join(HERE, 'setup.py')
 PORT = int(os.environ.get('FIGMA_BRIDGE_PORT', '7787'))
 BASE = 'http://127.0.0.1:%d' % PORT
 BS = chr(92)
@@ -112,7 +113,7 @@ def status():
     try:
         s = get_json('/status')
     except Exception as e:
-        die('bridge server is not answering on port %d (%s). Start it: node %s/server.js' % (PORT, e, HOME))
+        die('bridge server is not answering on port %d (%s). Start it: python3 "%s" start' % (PORT, e, SETUP))
     if not s.get('clients'):
         print('server is up, but no plugin is polling. In Figma: Plugins > Development > Claude Bridge (in the target file).')
     for c in s.get('clients', []):
@@ -143,9 +144,9 @@ def build_code(opts, body):
 
 
 def post(code, opts):
-    tok_path = os.path.join(HOME, '.token')
+    tok_path = os.path.join(HOME, 'server', '.token')
     if not os.path.exists(tok_path):
-        die('no token at %s — start the bridge server first (node %s/server.js)' % (tok_path, HOME))
+        die('no token at %s — start the bridge server first: python3 "%s" start' % (tok_path, SETUP))
     token = open(tok_path).read().strip()
     headers = {'x-token': token, 'content-type': 'text/plain; charset=utf-8'}
     if opts['file']:

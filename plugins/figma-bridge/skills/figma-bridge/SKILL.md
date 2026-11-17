@@ -17,8 +17,12 @@ that Claude can look at. The designer keeps working in the same file at the same
 python3 "$SKILL_DIR/scripts/setup.py" check
 ```
 
-- **Server not running** → `python3 "$SKILL_DIR/scripts/setup.py" start` (installs the bridge to `~/.figma-bridge` on first run and starts the server in the background; needs Node.js).
-- **First time on this computer** → ask the user to import the plugin once: Figma desktop app → Plugins → Development → Import plugin from manifest… → `~/.figma-bridge/plugin/manifest.json`.
+- **Server not running** (e.g. after a reboot) → `python3 "$SKILL_DIR/scripts/setup.py" start` — installs the bridge
+  folder `~/Documents/Claude Bridge` on first run and starts the server in the background (needs Node.js). Do this yourself,
+  don't send the user to the terminal.
+- **First time on this computer** → run `python3 "$SKILL_DIR/scripts/setup.py" open` (shows the folder in Finder) and ask the
+  user to import the plugin once: Figma desktop app → Plugins → Development → Import plugin from manifest… →
+  Documents → Claude Bridge → `manifest.json`.
 - **Plugin not connected** → ask the user to run Plugins → Development → **Claude Bridge** inside the file to edit and keep its small window open.
 - The check lists connected files by name. Use that exact name with `--file`. If the plugin is also open in some other file (another client, another project), ask the user to close it there — don't rely on luck.
 
@@ -34,7 +38,7 @@ python3 "$SKILL_DIR/scripts/fig.py" script.js --file "Exact file name" --lib [--
 - `--lib` prepends `scripts/lib.js`: `dump`, `png`, `pathOf`, `paintVar`, `bindNum`, `setPadding`, `setRadius`, `txt`, `setText`,
   `replaceInText`, `variantOf`, `setProp`, `getProp`, `component`, `snapshot`/`restore`, `offGrid`, `saveVersion`.
   Token names differ per file: set `LIB.spacePrefix` / `LIB.radiusPrefix` at the top of a script if needed.
-- `--arg key=value` → `ARGS.key` inside the script. The full result is saved to `~/.figma-bridge/out/<name>.json`.
+- `--arg key=value` → `ARGS.key` inside the script. The full result is saved to `~/Documents/Claude Bridge/out/<name>.json`.
 - Write scripts to files with a file-writing tool (shell heredocs can mangle `\u` escapes). Keep them in a scratch folder.
 - Ready-made examples in `scripts/examples/`: `probe.js` (file, page, selection; run without `--file` to see where the plugin is),
   `dump.js` (structure + picture of nodes), `find-text.js`, `set-text.js`.
