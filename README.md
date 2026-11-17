@@ -18,8 +18,6 @@
 curl -fsSL https://raw.githubusercontent.com/Rreerreea/claude-figma-bridge/main/install.sh | bash
 ```
 
-В начале установки на Маке есть безобидный сюрприз на 20 секунд. Без него: `curl … | NO_PRANK=1 bash`.
-
 После этого остается два шага:
 
 1. В Figma (приложение для компьютера): **Plugins → Development → Import plugin from manifest…** → Документы →
