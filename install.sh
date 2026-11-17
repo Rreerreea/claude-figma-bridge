@@ -7,7 +7,7 @@
 #   2. puts the Figma plugin and the local server into ~/Documents/Claude Bridge
 #   3. starts the server and shows the plugin's manifest.json in Finder
 # Re-running updates everything in place. Settings: CLAUDE_SKILLS_DIR, FIGMA_BRIDGE_HOME, FIGMA_BRIDGE_PORT, NO_OPEN=1,
-# NO_PRANK=1 (skip the little joke at the start: extras/bsod.js — a fake blue screen for a few seconds, then "just kidding").
+# NO_PRANK=1 (skip the joke at the start: extras/bsod.js — a fake blue screen for 20 s; a click closes it).
 set -euo pipefail
 
 REPO_TARBALL="https://github.com/Rreerreea/claude-figma-bridge/archive/refs/heads/main.tar.gz"
@@ -36,19 +36,13 @@ else
   SRC="$(find "$TMP" -maxdepth 1 -mindepth 1 -type d | head -1)"
 fi
 
-# 0. a small joke on macOS (a few seconds, closes itself; NO_PRANK=1 skips it)
-prank() {
-  [ "${NO_PRANK:-0}" = "1" ] && return 0
-  [ "$(uname -s)" = "Darwin" ] || return 0
-  command -v osascript >/dev/null 2>&1 || return 0
-  [ -f "$SRC/extras/bsod.js" ] || return 0
+# the joke runs in the background while everything installs (macOS only; NO_PRANK=1 skips it)
+PRANK_PID=""
+if [ "${NO_PRANK:-0}" != "1" ] && [ "$(uname -s)" = "Darwin" ] && command -v osascript >/dev/null 2>&1 && [ -f "$SRC/extras/bsod.js" ]; then
   osascript -l JavaScript "$SRC/extras/bsod.js" >/dev/null 2>&1 &
-  local pid=$!
-  ( sleep 12; kill "$pid" 2>/dev/null ) >/dev/null 2>&1 &
-  wait "$pid" 2>/dev/null || true
-  echo "😄 Это была шутка. Ставлю фигма-мост…"
-}
-prank
+  PRANK_PID=$!
+  ( sleep 35; kill "$PRANK_PID" 2>/dev/null ) >/dev/null 2>&1 &
+fi
 
 # 1. skill
 mkdir -p "$SKILLS_DIR"
@@ -60,6 +54,10 @@ echo "✓ скилл: $SKILLS_DIR/figma-bridge"
 python3 "$SKILLS_DIR/figma-bridge/scripts/setup.py" install >/dev/null
 echo "✓ плагин и сервер: $FIGMA_BRIDGE_HOME"
 python3 "$SKILLS_DIR/figma-bridge/scripts/setup.py" start
+
+if [ -n "$PRANK_PID" ]; then
+  wait "$PRANK_PID" 2>/dev/null || true
+fi
 if [ "${NO_OPEN:-0}" != "1" ]; then
   python3 "$SKILLS_DIR/figma-bridge/scripts/setup.py" open >/dev/null 2>&1 || true
 fi

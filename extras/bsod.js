@@ -1,8 +1,10 @@
-// A harmless joke for the installer: a fake "blue screen" on a Mac for ~3 s, then "just kidding", then it closes itself.
+// A harmless joke for the installer: a fake "blue screen" on a Mac for 20 seconds, then it just disappears.
 // macOS JavaScript for Automation:  osascript -l JavaScript bsod.js
-// - a borderless window above everything on the main screen; mouse and keyboard pass through (nothing is captured)
-// - closes by itself after ~5 s; the installer also kills it after 12 s as a safety net
-// - BSOD_DRY=1 builds everything without showing it (for checks); NO_PRANK=1 in the installer skips it entirely
+// - a borderless window above everything on the main screen; it takes mouse clicks itself, so nothing underneath
+//   gets clicked blindly, and a click closes it early
+// - closes by itself after 20 s; the installer also kills it after 35 s as a safety net
+// - BSOD_DRY=1 builds everything without showing it (for checks); BSOD_SECONDS=N changes the duration;
+//   NO_PRANK=1 in the installer skips it entirely
 ObjC.import('Cocoa');
 
 function env(name) {
@@ -12,6 +14,7 @@ function env(name) {
 
 function run() {
   const DRY = env('BSOD_DRY') === '1';
+  const SECONDS = Number(env('BSOD_SECONDS')) || 20;
   const app = $.NSApplication.sharedApplication;
   app.setActivationPolicy(1); // accessory: no Dock icon
 
@@ -22,12 +25,12 @@ function run() {
   win.setCollectionBehavior(1 | 256);      // all spaces + full-screen auxiliary
   win.setBackgroundColor($.NSColor.colorWithSRGBRedGreenBlueAlpha(0, 0.47, 0.84, 1));
   win.setOpaque(true);
-  win.setIgnoresMouseEvents(true);
+  win.setIgnoresMouseEvents(false);        // clicks land here, not on hidden windows underneath
   win.setReleasedWhenClosed(false);
   const view = win.contentView;
 
   // AppKit counts y from the bottom; yTop is measured from the top of the screen
-  function label(text, size, x, yTop, w, h, weight) {
+  function label(text, size, x, yTop, w, h) {
     const tf = $.NSTextField.alloc.initWithFrame($.NSMakeRect(x, H - yTop - h, w, h));
     tf.setStringValue(text);
     tf.setBezeled(false);
@@ -35,7 +38,7 @@ function run() {
     tf.setEditable(false);
     tf.setSelectable(false);
     tf.setTextColor($.NSColor.whiteColor);
-    tf.setFont($.NSFont.systemFontOfSizeWeight(size, weight || 0));
+    tf.setFont($.NSFont.systemFontOfSizeWeight(size, 0));
     tf.cell.setWraps(true);
     tf.cell.setLineBreakMode(0); // word wrap
     view.addSubview(tf);
@@ -44,33 +47,29 @@ function run() {
 
   const x0 = Math.round(W * 0.12), tw = Math.round(W * 0.76);
   const s = Math.max(18, Math.round(H * 0.03));
-  const bsod = [
-    label(':(', Math.round(H * 0.17), x0, H * 0.14, tw, H * 0.22, 0),
-    label('На вашем ПК возникла проблема, и его необходимо перезагрузить. Мы лишь собираем некоторые сведения об ошибке, а затем будет автоматически выполнена перезагрузка.', s, x0, H * 0.38, tw, s * 3.6, 0),
-  ];
-  const pct = label('0% завершено', s, x0, H * 0.38 + s * 4.4, tw, s * 1.4, 0);
-  bsod.push(pct);
-  bsod.push(label('Код остановки: FIGMA_TOO_MANY_LAYERS', Math.round(s * 0.6), x0, H * 0.74, tw, s, 0));
+  label(':(', Math.round(H * 0.17), x0, H * 0.14, tw, H * 0.22);
+  label('На вашем ПК возникла проблема, и его необходимо перезагрузить. Мы лишь собираем некоторые сведения об ошибке, а затем будет автоматически выполнена перезагрузка.', s, x0, H * 0.38, tw, s * 3.6);
+  const pct = label('0% завершено', s, x0, H * 0.38 + s * 4.4, tw, s * 1.4);
+  label('Код остановки: FIGMA_TOO_MANY_LAYERS', Math.round(s * 0.6), x0, H * 0.74, tw, s);
 
-  const joke = [
-    label('Шутка 😄', Math.round(H * 0.11), x0, H * 0.3, tw, H * 0.16, 0.3),
-    label('Это Mac — синих экранов тут не бывает. Фигма-мост уже ставится, возвращайтесь в Терминал.', s, x0, H * 0.3 + H * 0.17, tw, s * 2.6, 0),
-  ];
-  joke.forEach((j) => j.setHidden(true));
-
-  if (DRY) return 'ok: ' + Math.round(W) + 'x' + Math.round(H);
+  if (DRY) return 'ok: ' + Math.round(W) + 'x' + Math.round(H) + ', ' + SECONDS + ' s';
 
   win.orderFrontRegardless();
   const pump = (sec) => $.NSRunLoop.currentRunLoop.runUntilDate($.NSDate.dateWithTimeIntervalSinceNow(sec));
-  pump(0.6);
-  for (let p = 0; p <= 100; p += 5) {
-    pct.setStringValue(p + '% завершено');
-    pump(0.13);
+  const t0 = Date.now();
+  let shown = 0, nextJump = 1.2;
+  while (true) {
+    const elapsed = (Date.now() - t0) / 1000;
+    if (elapsed >= SECONDS) break;
+    if (Number($.NSEvent.pressedMouseButtons) > 0) break;          // a click closes it early
+    if (elapsed >= nextJump && shown < 100) {                       // jumpy progress, like the real thing
+      const target = Math.min(100, Math.round((elapsed / (SECONDS * 0.9)) * 100));
+      shown = Math.max(shown, target);
+      pct.setStringValue(shown + '% завершено');
+      nextJump = elapsed + 0.4 + Math.random() * 1.1;
+    }
+    pump(0.05);
   }
-  pump(0.4);
-  bsod.forEach((b) => b.setHidden(true));
-  joke.forEach((j) => j.setHidden(false));
-  pump(2.4);
   win.orderOut(null);
   win.close();
   return 'done';
