@@ -1,7 +1,7 @@
 // A harmless joke for the installer: a fake "blue screen" on a Mac for 20 seconds, then it just disappears.
 // macOS JavaScript for Automation:  osascript -l JavaScript bsod.js
-// - a borderless window above everything on the main screen; it takes mouse clicks itself, so nothing underneath
-//   gets clicked blindly, and a click closes it early
+// - a borderless window above everything on the main screen; it takes mouse clicks itself (they do nothing), so
+//   nothing underneath gets clicked blindly; only waiting closes it
 // - closes by itself after 20 s; the installer also kills it after 35 s as a safety net
 // - BSOD_DRY=1 builds everything without showing it (for checks); BSOD_SECONDS=N changes the duration;
 //   NO_PRANK=1 in the installer skips it entirely
@@ -61,7 +61,6 @@ function run() {
   while (true) {
     const elapsed = (Date.now() - t0) / 1000;
     if (elapsed >= SECONDS) break;
-    if (Number($.NSEvent.pressedMouseButtons) > 0) break;          // a click closes it early
     if (elapsed >= nextJump && shown < 100) {                       // jumpy progress, like the real thing
       const target = Math.min(100, Math.round((elapsed / (SECONDS * 0.9)) * 100));
       shown = Math.max(shown, target);

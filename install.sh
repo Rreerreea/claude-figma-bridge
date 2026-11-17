@@ -7,7 +7,7 @@
 #   2. puts the Figma plugin and the local server into ~/Documents/Claude Bridge
 #   3. starts the server and shows the plugin's manifest.json in Finder
 # Re-running updates everything in place. Settings: CLAUDE_SKILLS_DIR, FIGMA_BRIDGE_HOME, FIGMA_BRIDGE_PORT, NO_OPEN=1,
-# NO_PRANK=1 (skip the joke at the start: extras/bsod.js — a fake blue screen for 20 s; a click closes it).
+# NO_PRANK=1 (skip the joke at the start: extras/bsod.js — a fake blue screen for 20 s, then it disappears).
 set -euo pipefail
 
 REPO_TARBALL="https://github.com/Rreerreea/claude-figma-bridge/archive/refs/heads/main.tar.gz"
