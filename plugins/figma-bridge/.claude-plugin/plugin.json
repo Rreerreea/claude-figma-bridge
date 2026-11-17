@@ -1,0 +1,11 @@
+{
+  "name": "figma-bridge",
+  "description": "Edit Figma mockups from Claude Code through a local plugin bridge: full Plugin API, no MCP limits, PNG checks, a workflow for client comments and a long list of real-world gotchas.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Rreerreea"
+  },
+  "homepage": "https://github.com/Rreerreea/claude-figma-bridge",
+  "license": "MIT",
+  "keywords": ["figma", "design", "mockups", "plugin", "bridge"]
+}

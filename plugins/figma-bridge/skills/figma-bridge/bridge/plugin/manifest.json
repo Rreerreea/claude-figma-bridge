@@ -1,0 +1,14 @@
+{
+  "name": "Claude Bridge",
+  "id": "claude-figma-bridge",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "devAllowedDomains": ["http://localhost:7787"],
+    "reasoning": "Talks only to the local Claude Code bridge on this computer"
+  }
+}

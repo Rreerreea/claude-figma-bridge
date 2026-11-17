@@ -1,0 +1,43 @@
+<!doctype html><html><head><meta charset="utf-8"></head>
+<body style="font:12px -apple-system,Inter,sans-serif;margin:12px;color:#141416">
+<div id="s" style="font-weight:600">Connecting to Claude…</div>
+<div id="f" style="color:#777E90;margin-top:4px"></div>
+<div id="l" style="color:#777E90;margin-top:4px">Keep this window open while Claude works</div>
+<script>
+const BASE = 'http://localhost:7787';
+let busy = false, done = 0, file = '';
+const s = document.getElementById('s'), f = document.getElementById('f'), l = document.getElementById('l');
+
+onmessage = async (ev) => {
+  const m = ev.data && ev.data.pluginMessage;
+  if (!m) return;
+  if (m.type === 'hello') { file = m.file || ''; f.textContent = 'File: ' + file; return; }
+  if (m.type !== 'result') return;
+  let body;
+  try { body = JSON.stringify(m); }
+  catch (e) { body = JSON.stringify({ id: m.id, ok: false, error: 'result is not serializable: ' + e }); }
+  await fetch(BASE + '/result', { method: 'POST', headers: { 'content-type': 'application/json' }, body }).catch(() => {});
+  done++; busy = false;
+  l.textContent = 'Jobs done: ' + done + ' (last ' + Math.round((m.ms || 0) / 1000) + ' s)' + (m.ok ? '' : ' — error');
+};
+
+async function poll() {
+  if (busy) return;
+  try {
+    const r = await fetch(BASE + '/next?file=' + encodeURIComponent(file));
+    const job = await r.json();
+    s.textContent = 'Connected to Claude ✓';
+    if (job) {
+      busy = true;
+      l.textContent = 'Running job #' + job.id + '…';
+      parent.postMessage({ pluginMessage: { type: 'job', id: job.id, code: job.code } }, '*');
+    }
+  } catch (e) {
+    s.textContent = 'No connection — is the bridge server running?';
+  }
+}
+
+parent.postMessage({ pluginMessage: { type: 'whoami' } }, '*');
+setInterval(poll, 700);
+setTimeout(poll, 300);
+</script></body></html>

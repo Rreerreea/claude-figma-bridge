@@ -1,0 +1,16 @@
+{
+  "name": "claude-figma-bridge",
+  "description": "Claude Code + Figma through a local plugin bridge",
+  "owner": {
+    "name": "Rreerreea"
+  },
+  "plugins": [
+    {
+      "name": "figma-bridge",
+      "description": "Edit Figma mockups from Claude Code through a local plugin bridge: full Plugin API, no MCP limits, PNG checks, a workflow for client comments and real-world gotchas.",
+      "source": "./plugins/figma-bridge",
+      "category": "design",
+      "homepage": "https://github.com/Rreerreea/claude-figma-bridge"
+    }
+  ]
+}
